@@ -1,23 +1,55 @@
 import http from 'k6/http';
-import { sleep } from 'k6';
+import { sleep, check } from 'k6';
 
-// Options vus: virtual users, duration: total time 
+
 export const options = {
-    vus: 2000, // Virtual Users - VUs
-    duration: '50s', // Run the testing k6 file in duration time 
+    vus: 5000,
+    duration: '100s',
 };
 
 export default function () {
-    let data = JSON.stringify({
-        "password": "admin",
-        "username": "admin"
-    });
+    login();
+    getAuction();
+    viewProfile();
+    viewAllAccount();
+    sleep(1); // Wait for 1 second before starting the next iteration
+}
 
-    let headers = {
-        'Content-Type': 'application/json',
+function login() {
+    let payload = {
+        phone_number: '0123456788',
+        password: 'password123',
     };
 
-    // let response = http.post('https://videogamedb.uk:443/api/authenticate', data, { headers: headers });
-    
-    console.log(response.status);
+    let headers = { 'Content-Type': 'application/json' };
+
+    let res = http.post('http://localhost:8081/api/v1/login', JSON.stringify(payload), { headers: headers });
+
+    check(res, {
+        'Login status is 200': (r) => r.status === 200,
+    });
+}
+
+function getAuction() {
+    let res = http.get('http://localhost:8081/api/v1/auction');
+
+    check(res, {
+        'Get auction status is 200': (r) => r.status === 200,
+    });
+}
+
+function viewProfile() {
+    let res = http.get('http://localhost:8081/api/v1/account/0123456788');
+
+    check(res, {
+        'View profile status is 200': (r) => r.status === 200,
+    });
+}
+
+function viewAllAccount() {
+    let res = http.get('http://localhost:8081/api/v1/account');
+
+    check(res, {
+        'View all account status is 200': (r) => r.status === 200,
+    });
 }
